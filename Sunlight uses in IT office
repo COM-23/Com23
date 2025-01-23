@@ -1,0 +1,69 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+
+const int voltagePin = A0;   
+const int ldrPin = A1;        
+const int relayPin = 2;       
+
+// LCD setup (address 0x27 is a common I2C address for 16x2 LCD)
+LiquidCrystal_I2C lcd(0x27, 16, 2); 
+
+
+const float voltageThreshold = 5.0;  
+const int ldrThresholdDark = 500;  
+float vOUT = 0.0;
+float vIN = 0.0;
+float R1 = 3000.0;
+float R2 = 750.0;
+int val = 0;
+
+void setup() {
+  pinMode(voltagePin, INPUT);
+  pinMode(ldrPin, INPUT);
+  pinMode(relayPin, OUTPUT); 
+  digitalWrite(relayPin, LOW);  
+  
+ 
+  lcd.begin(16, 2);  
+  lcd.init();
+  lcd.backlight();   
+  lcd.clear();       
+
+  Serial.begin(9600);             
+}
+
+void loop() {
+  
+  val = analogRead(voltagePin);
+  vOUT = (val * 4.0) / 1023.0;
+  vIN = vOUT / (R2 / (R1 + R2));
+
+  
+  int ldrValue = analogRead(ldrPin);  
+    lcd.setCursor(0, 0);  
+  lcd.print("Voltage: ");
+  lcd.print(vIN, 1);  
+ 
+   
+    if (ldrValue > ldrThresholdDark) {
+      lcd.setCursor(0, 1);  
+      lcd.print("Light: ON   ");  
+      digitalWrite(relayPin, HIGH);  
+    } 
+     
+     else {
+      lcd.setCursor(0, 1); 
+      lcd.print("Light: OFF  ");  
+      digitalWrite(relayPin, LOW);   
+    }
+  
+
+  // Debug output to Serial Monitor
+  Serial.print("Voltage: ");
+  Serial.print(vIN);
+  Serial.print(" V, LDR Value: ");
+  Serial.println(ldrValue);
+
+  delay(1000); 
+}
